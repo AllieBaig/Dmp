@@ -1,86 +1,78 @@
-const CACHE_NAME = 'dual-music-cache-v1';
+const CACHE_NAME = 'dual-music-pwa-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './offline.html',
   './script.js',
-  './playlist.js',
   './badges.js',
-  './auth.js',
+  './icon.png',
+  './white_noise.mp3',
   './manifest.json',
-  // Note: skipping /white_noise.mp3 from install cache; can be cached on-demand
 ];
 
-// Install event - cache static assets and offline fallback page
-self.addEventListener('install', (event) => {
+// Install: Cache essential assets
+self.addEventListener('install', event => {
+  console.log('[SW] Installing service worker...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[SW] Caching app shell...');
+        return cache.addAll(ASSETS_TO_CACHE);
+      })
   );
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
+// Activate: Clean up old caches
+self.addEventListener('activate', event => {
+  console.log('[SW] Activating service worker...');
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
+    caches.keys().then(keys =>
       Promise.all(
-        cacheNames.map((cacheName) => {
-          if (!cacheWhitelist.includes(cacheName)) {
-            return caches.delete(cacheName);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       )
-    ).then(() => self.clients.claim())
+    )
   );
+  self.clients.claim();
 });
 
-// Fetch event - respond with cached assets or fetch from network, fallback to offline page
-self.addEventListener('fetch', (event) => {
-  // Handle only GET requests to avoid interfering with POST, etc.
-  if (event.request.method !== 'GET') return;
+// Fetch: Serve from cache or network fallback
+self.addEventListener('fetch', event => {
+  const { request } = event;
+
+  // Bypass non-GET requests
+  if (request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached asset
-        return cachedResponse;
-      }
-      // Attempt network fetch and cache it for future
-      return fetch(event.request).then((networkResponse) => {
-        // Optionally cache media or dynamic content here (skip for large audio for now)
-        if (
-          event.request.url.startsWith(self.location.origin) &&
-          event.request.destination !== 'audio'
-        ) {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
+    caches.match(request)
+      .then(cached => {
+        if (cached) {
+          return cached;
+        }
+
+        return fetch(request)
+          .then(response => {
+            // Optionally cache new requests
+            const cloned = response.clone();
+
+            // Only cache if it's a valid response from same-origin
+            if (
+              response.status === 200 &&
+              request.url.startsWith(self.location.origin)
+            ) {
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(request, cloned);
+              });
+            }
+
+            return response;
+          })
+          .catch(() => {
+            // Optionally return offline fallback for certain requests
+            if (request.destination === 'document') {
+              return caches.match('./index.html');
+            }
           });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // Offline fallback handling
-        if (event.request.destination === 'document') {
-          return caches.match('/offline.html');
-        }
-        // Optionally return fallback for images, audio, etc.
-        if (event.request.destination === 'image') {
-          // Return a placeholder image from cache or data URI here if available
-          return new Response('', { status: 404, statusText: 'Offline' });
-        }
-        if (event.request.destination === 'audio') {
-          // Return a silent short audio or similar fallback if desired
-          return new Response('', { status: 404, statusText: 'Offline' });
-        }
-        return new Response('Offline', {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'text/plain' },
-        });
-      });
-    }).catch((error) => {
-      console.error('Fetch failed:', error);
-      return caches.match('/offline.html');
-    })
+      })
   );
 });
+
