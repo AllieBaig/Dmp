@@ -1,6 +1,6 @@
 const CACHE_NAME = 'dual-music-cache-v1';
 const ASSETS_TO_CACHE = [
-  '/',
+  './',
   './index.html',
   './offline.html',
   './script.js',
