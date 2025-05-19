@@ -1,4 +1,4 @@
-const fileInput       = document.getElementById("fileInput");
+const fileInput       = document.getElementById("audio-upload");
 const songList        = document.getElementById("songList");
 const audioPlayer     = document.getElementById("audioPlayer");
 const whiteNoise      = document.getElementById("whiteNoisePlayer");
