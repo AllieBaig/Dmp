@@ -180,37 +180,38 @@
       }, 1000); // Give it a second to register
     });
 
-    // Function to reset the service worker
     function resetServiceWorker() {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          console.log('Found registrations to unregister:', registrations.length);
-          for(let registration of registrations) {
-            registration.unregister();
-            console.log('Service worker unregistered from scope:', registration.scope);
-          }
-          // Then re-register after a short delay
-          setTimeout(() => {
-            navigator.serviceWorker.register('./service-worker.js')
-              .then(reg => {
-                console.log('Service worker re-registered:', reg.scope);
-                alert('Service Worker reset successful!');
-                // Force page reload to ensure the new service worker takes control
-                window.location.reload();
-              })
-              .catch(err => {
-                console.error('Service worker re-registration failed:', err);
-                alert('Service Worker reset failed: ' + err.message);
-              });
-          }, 1000);
-        }).catch(err => {
-          console.error('Service worker getRegistrations failed:', err);
-          alert('Could not access service worker registrations: ' + err.message);
-        });
-      } else {
-        alert('Service Workers are not supported in this browser.');
-      }
-    }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      console.log('Found registrations to unregister:', registrations.length);
+      const unregisterPromises = registrations.map(reg => reg.unregister());
+      
+      Promise.all(unregisterPromises).then(() => {
+        console.log('All service workers unregistered');
+
+        // Wait a short moment before re-registering
+        setTimeout(() => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => {
+              console.log('Service worker re-registered:', reg.scope);
+              alert('Service Worker reset successful!');
+              window.location.reload();
+            })
+            .catch(err => {
+              console.error('Service worker re-registration failed:', err);
+              alert('Service Worker reset failed: ' + err.message);
+            });
+        }, 500);
+      });
+    }).catch(err => {
+      console.error('Get registrations error:', err);
+      alert('Could not access service worker registrations: ' + err.message);
+    });
+  } else {
+    alert('Service Workers are not supported in this browser.');
+  }
+}
+    
   </script>
 </body>
 </html>
