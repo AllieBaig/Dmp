@@ -123,6 +123,23 @@ navigator.serviceWorker.getRegistrations().then(registrations => {
       
       
     });
+
+    // Add this button to your HTML temporarily
+function resetServiceWorker() {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for(let registration of registrations) {
+      registration.unregister();
+      console.log('Service worker unregistered');
+    }
+    // Then re-register after a short delay
+    setTimeout(() => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('Service worker re-registered:', reg.scope))
+        .catch(err => console.error('Service worker re-registration failed:', err));
+    }, 1000);
+  });
+}
+    
   </script>
 
   <div id="subliminal-player" style="padding: 1em; background: #f0f0f0; border-radius: 10px; margin: 2em 0;">
