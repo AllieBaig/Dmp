@@ -1,13 +1,13 @@
 const CACHE_NAME = 'dual-music-cache-v1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
-  '/offline.html',
-  '/script.js',
-  '/playlist.js',
-  '/badges.js',
-  '/auth.js',
-  '/manifest.json',
+  './index.html',
+  './offline.html',
+  './script.js',
+  './playlist.js',
+  './badges.js',
+  './auth.js',
+  './manifest.json',
   // Note: skipping /white_noise.mp3 from install cache; can be cached on-demand
 ];
 
