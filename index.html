@@ -102,5 +102,29 @@
       }
     });
   </script>
+
+  <div id="subliminal-player" style="padding: 1em; background: #f0f0f0; border-radius: 10px; margin: 2em 0;">
+  <h3>Subliminal Audio Player</h3>
+  
+  <label>Subliminal Audio:</label>
+  <input type="file" id="subliminal-file" accept="audio/*"><br><br>
+
+  <label>Masking Audio (optional):</label>
+  <input type="file" id="masking-file" accept="audio/*"><br><br>
+
+  <label>Subliminal Volume:</label>
+  <input type="range" id="subliminal-volume" min="0" max="1" step="0.01" value="0.3"><br><br>
+
+  <label>Masking Volume:</label>
+  <input type="range" id="masking-volume" min="0" max="1" step="0.01" value="0.8"><br><br>
+
+  <label>
+    <input type="checkbox" id="use-white-noise"> Use White Noise (if no masking file)
+  </label><br><br>
+
+  <button id="play-subliminal">Play</button>
+  <button id="stop-subliminal">Stop</button>
+</div>
+  
 </body>
 </html>
