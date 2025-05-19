@@ -145,3 +145,72 @@ function handleUnload(e) {
   }
   recordTime();
 }
+
+let audioCtx;
+let subliminalSource, maskingSource, whiteNoiseSource;
+let subliminalGain, maskingGain;
+let isPlaying = false;
+
+document.getElementById('play-subliminal').addEventListener('click', async () => {
+  if (isPlaying) return;
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Setup gain nodes
+  subliminalGain = audioCtx.createGain();
+  maskingGain = audioCtx.createGain();
+
+  const subliminalVolume = parseFloat(document.getElementById('subliminal-volume').value);
+  const maskingVolume = parseFloat(document.getElementById('masking-volume').value);
+
+  subliminalGain.gain.value = subliminalVolume;
+  maskingGain.gain.value = maskingVolume;
+
+  // Load subliminal audio
+  const subliminalFile = document.getElementById('subliminal-file').files[0];
+  if (!subliminalFile) return alert("Please select a subliminal file.");
+
+  const subliminalBuffer = await fileToAudioBuffer(subliminalFile);
+  subliminalSource = audioCtx.createBufferSource();
+  subliminalSource.buffer = subliminalBuffer;
+  subliminalSource.loop = true;
+  subliminalSource.connect(subliminalGain).connect(audioCtx.destination);
+  subliminalSource.start(0);
+
+  // Load masking file or white noise
+  const maskingFile = document.getElementById('masking-file').files[0];
+  const useWhiteNoise = document.getElementById('use-white-noise').checked;
+
+  if (maskingFile) {
+    const maskingBuffer = await fileToAudioBuffer(maskingFile);
+    maskingSource = audioCtx.createBufferSource();
+    maskingSource.buffer = maskingBuffer;
+    maskingSource.loop = true;
+    maskingSource.connect(maskingGain).connect(audioCtx.destination);
+    maskingSource.start(0);
+  } else if (useWhiteNoise) {
+    const whiteNoiseBuffer = await fetch('white_noise.mp3')
+      .then(res => res.arrayBuffer())
+      .then(data => audioCtx.decodeAudioData(data));
+    whiteNoiseSource = audioCtx.createBufferSource();
+    whiteNoiseSource.buffer = whiteNoiseBuffer;
+    whiteNoiseSource.loop = true;
+    whiteNoiseSource.connect(maskingGain).connect(audioCtx.destination);
+    whiteNoiseSource.start(0);
+  }
+
+  isPlaying = true;
+});
+
+document.getElementById('stop-subliminal').addEventListener('click', () => {
+  if (subliminalSource) subliminalSource.stop();
+  if (maskingSource) maskingSource.stop();
+  if (whiteNoiseSource) whiteNoiseSource.stop();
+  isPlaying = false;
+});
+
+async function fileToAudioBuffer(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  return audioCtx.decodeAudioData(arrayBuffer);
+}
+
