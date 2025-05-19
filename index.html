@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dual Music Player</title>
 
-  <!-- Progressive Web App -->
-  <meta name="mobile-web-app-capable" content="yes" />
+  <!-- SEO & PWA Metadata -->
+  <meta name="description" content="Listen to and manage two audio streams simultaneously. A minimalist offline-friendly dual music player." />
   <meta name="theme-color" content="#007bff" />
+  <link rel="canonical" href="https://yourdomain.com/" />
 
-  <!-- Apple PWA Support -->
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
+  <link rel="apple-touch-icon" href="/icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Dual Music Player" />
-  <link rel="apple-touch-icon" href="/icon.png" />
-
-  <!-- Manifest & Icon -->
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
 
   <style>
     body {
@@ -29,30 +29,67 @@
     h1 {
       text-align: center;
     }
-    #player-controls, #stats {
+    section {
       margin: 1rem 0;
       text-align: center;
     }
     input[type="file"] {
       margin-top: 1rem;
     }
+    button {
+      margin: 0.25rem;
+    }
   </style>
 </head>
 <body>
 
-  <h1>🎧 Dual Music Player</h1>
+  <main>
+    <h1>🎧 Dual Music Player</h1>
 
-  <div id="player-controls">
-    <input type="file" id="audio-upload" accept="audio/*" multiple />
-    <br/>
-    <button onclick="toggleWhiteNoise()">Toggle White Noise</button>
-    <button onclick="showBadges()">Show Badges</button>
-    <ul id="audio-list"></ul>
-  </div>
+    <section aria-labelledby="controls-heading">
+      <h2 id="controls-heading" class="visually-hidden">Audio Controls</h2>
+      <label for="audio-upload">Upload audio files:</label>
+      <input type="file" id="audio-upload" accept="audio/*" multiple aria-label="Upload audio files" />
+      <div>
+        <button id="toggle-noise-btn" type="button" aria-label="Toggle white noise">Toggle White Noise</button>
+        <button id="show-badges-btn" type="button" aria-label="Show achievement badges">Show Badges</button>
+      </div>
+      <ul id="audio-list" aria-label="Uploaded audio files list"></ul>
+    </section>
 
-  <div id="stats"></div>
+    <section id="stats" aria-labelledby="stats-heading">
+      <h2 id="stats-heading" class="visually-hidden">Player Statistics</h2>
+    </section>
+  </main>
 
-  <script src="script.js"></script>
-  <script src="badges.js"></script>
+  <!-- Scripts loaded with defer for better performance -->
+  <script src="script.js" defer></script>
+  <script src="badges.js" defer></script>
+  <script defer>
+    // Event listeners instead of inline handlers
+    window.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('toggle-noise-btn');
+      const badgeBtn = document.getElementById('show-badges-btn');
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          if (typeof toggleWhiteNoise === 'function') toggleWhiteNoise();
+        });
+      }
+
+      if (badgeBtn) {
+        badgeBtn.addEventListener('click', () => {
+          if (typeof showBadges === 'function') showBadges();
+        });
+      }
+
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('Service worker registered:', reg.scope))
+          .catch(err => console.error('Service worker registration failed:', err));
+      }
+    });
+  </script>
 </body>
 </html>
