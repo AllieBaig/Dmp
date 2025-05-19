@@ -105,6 +105,22 @@
   })
   .catch(err => console.error('Service worker registration failed:', err));
 }
+
+      // Add this after your registration code
+navigator.serviceWorker.ready.then(registration => {
+  console.log('Service worker is active:', registration.active);
+  console.log('Service worker state:', registration.active?.state);
+});
+
+// Also check all registered service workers
+navigator.serviceWorker.getRegistrations().then(registrations => {
+  console.log('All registrations:', registrations);
+  registrations.forEach(reg => {
+    console.log('Registration scope:', reg.scope);
+    console.log('Active service worker:', reg.active);
+  });
+});
+      
       
     });
   </script>
